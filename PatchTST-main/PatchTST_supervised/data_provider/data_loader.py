@@ -224,10 +224,6 @@ class Dataset_Custom(Dataset):
         df_raw = pd.read_csv(os.path.join(self.root_path,
                                           self.data_path))
 
-        # print('---- Print DF -----')
-        print(df_raw.to_markdown())
-        # exit()
-
         '''
         df_raw.columns: ['date', ...(other features), target feature]
         '''
@@ -236,6 +232,7 @@ class Dataset_Custom(Dataset):
         cols.remove('date')
         cols.remove('Name')
         df_raw = df_raw[['date'] + cols + [self.target]]
+        # print(df_raw.to_markdown())
         # print(cols)
         num_train = int(len(df_raw) * 0.7)
         num_test = int(len(df_raw) * 0.2)
