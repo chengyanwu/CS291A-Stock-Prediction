@@ -14,9 +14,9 @@ model_id_name=amazon
 data_name=custom
 
 random_seed=2021
-for pred_len in 3 7 14
+for pred_len in 96 192 336 720
 do
-    python3 -u run_longExp.py \
+    python -u run_longExp.py \
       --random_seed $random_seed \
       --is_training 1 \
       --root_path $root_path_name \
@@ -35,8 +35,8 @@ do
       --dropout 0.2\
       --fc_dropout 0.2\
       --head_dropout 0\
-      --patch_len 8\
-      --stride 4\
+      --patch_len 16\
+      --stride 8\
       --des 'Exp' \
       --train_epochs 100\
       --patience 20\
