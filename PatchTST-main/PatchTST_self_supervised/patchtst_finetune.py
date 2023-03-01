@@ -19,6 +19,7 @@ from datautils import *
 import argparse
 
 parser = argparse.ArgumentParser()
+
 # Pretraining and Finetuning
 parser.add_argument('--is_finetune', type=int, default=0,
                     help='do finetuning or not')
@@ -241,7 +242,6 @@ def test_func(weight_path):
     pd.DataFrame(np.array(out[2]).reshape(1, -1), columns=['mse', 'mae']).to_csv(
         args.save_path + args.save_finetuned_model + '_acc.csv', float_format='%.6f', index=False)
     return out
-
 
 if __name__ == '__main__':
 

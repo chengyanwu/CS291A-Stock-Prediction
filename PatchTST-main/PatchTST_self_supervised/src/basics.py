@@ -61,7 +61,8 @@ def get_available_cuda(usage=10):
     # collect available cuda devices, only collect devices that has less that 'usage' percent 
     device_ids = []
     for device in range(torch.cuda.device_count()):
-        if torch.cuda.utilization(device) < usage: device_ids.append(device)
+        # if torch.cuda.utilization(device) < usage: device_ids.append(device)
+        device_ids.append(device)
     return device_ids
 
 
