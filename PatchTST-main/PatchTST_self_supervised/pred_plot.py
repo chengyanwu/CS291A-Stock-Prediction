@@ -110,11 +110,11 @@ def get_model(c_in, args, head_type, weight_path=None):
     return model
 
 
-
 def test_plot(weight_path):
+    device = torch.device('cpu')
     # get dataloader
     dls = get_dls(args)
-    model = get_model(dls.vars, args, head_type='prediction').to('cuda')
+    model = get_model(dls.vars, args, head_type='prediction').to(device)
     # get callbacks
     # cbs = [RevInCB(dls.vars, denorm=True)] if args.revin else []
     # cbs += [PatchCB(patch_len=args.patch_len, stride=args.stride)]
@@ -134,22 +134,28 @@ def test_plot(weight_path):
 
     preds = []
     trues = []
+    inputx = []
 
     folder_path = './test_results/amzn_cw40_tw7_patch12_stride12_epochs/'
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
 
     model.eval()
-    device = torch.device('cpu')
+    
+
 
     with torch.no_grad():
         for i, (batch_x, batch_y) in enumerate(dls.test_dataloader()):
+
             batch_x = batch_x.float().to(device)
             batch_y = batch_y.float().to(device)
-            
+
+            # batch_x_mark = batch_x_mark.float().to(device)
+            # batch_y_mark = batch_y_mark.float().to(device)
+            print(batch_x.shape)
             outputs = model(batch_x)
 
-            f_dim = -1 
+            f_dim = -1
             # print(outputs.shape,batch_y.shape)
             outputs = outputs[:, -args.target_points:, f_dim:]
             batch_y = batch_y[:, -args.target_points:, f_dim:].to(device)
@@ -166,14 +172,16 @@ def test_plot(weight_path):
                 input = batch_x.detach().cpu().numpy()
                 gt = np.concatenate((input[0, :, -1], true[0, :, -1]), axis=0)
                 pd = np.concatenate((input[0, :, -1], pred[0, :, -1]), axis=0)
-                visual(gt, pd, os.path.join(folder_path, str(i) + '.pdf'))
+                # visual(gt, pd, os.path.join(folder_path, str(i) + '.pdf'))
 
-    plt.figure()
-    plt.plot(trues, label='GroundTruth', linewidth=2)
-    plt.plot(preds, label='Prediction', linewidth=2)
-    plt.legend()
-    plt.title(weight_path)
-    plt.savefig('test.png', bbox_inches='tight')
+                plt.figure()
+                plt.plot(gt, label='GroundTruth', linewidth=2)
+                plt.plot(pd, label='Prediction', linewidth=2)
+                plt.legend()
+                plt.title(weight_path)
+                plt.savefig('test.png', bbox_inches='tight')
+
+    
 
 
 

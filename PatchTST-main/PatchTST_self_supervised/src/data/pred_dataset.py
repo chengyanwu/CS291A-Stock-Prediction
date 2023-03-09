@@ -240,15 +240,19 @@ class Dataset_Custom(Dataset):
         self.time_col_name = time_col_name
         self.use_time_features = use_time_features
 
+        self.mean = 0.
+        self.std = 1.
+
         # train test ratio
         self.train_split, self.test_split = train_split, test_split
 
         self.root_path = root_path
         self.data_path = data_path
+        self.scaler = StandardScaler()
+
         self.__read_data__()
 
     def __read_data__(self):
-        self.scaler = StandardScaler()
         df_raw = pd.read_csv(os.path.join(self.root_path,
                                           self.data_path))
 
@@ -279,6 +283,10 @@ class Dataset_Custom(Dataset):
             train_data = df_data[border1s[0]:border2s[0]]
             self.scaler.fit(train_data.values)
             data = self.scaler.transform(df_data.values)
+            self.mean = self.scaler.mean_
+            self.std = self.scaler.scale_
+            print("mean:", self.mean)
+            print("std:", self.std)
         else:
             data = df_data.values
 

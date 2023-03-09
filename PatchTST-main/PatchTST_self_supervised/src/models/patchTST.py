@@ -208,6 +208,8 @@ class PatchTSTEncoder(nn.Module):
         x: tensor [bs x num_patch x nvars x patch_len]
         """
         bs, num_patch, n_vars, patch_len = x.shape
+        # bs, num_patch, n_vars = x.shape
+
         # Input encoding
         if not self.shared_embedding:
             x_out = []

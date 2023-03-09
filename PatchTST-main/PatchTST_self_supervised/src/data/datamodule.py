@@ -35,6 +35,10 @@ class DataLoaders:
         self.valid = self.val_dataloader()
         self.test = self.test_dataloader()
 
+
+        self.mean = 0.
+        self.std = 1.
+
     def train_dataloader(self):
         return self._make_dloader("train", shuffle=self.shuffle_train)
 
@@ -48,6 +52,9 @@ class DataLoaders:
         dataset = self.datasetCls(**self.dataset_kwargs, split=split)
         if len(dataset) == 0:
             return None
+        
+        self.mean = dataset.mean
+        self.std = dataset.std
         return DataLoader(
             dataset,
             shuffle=shuffle,

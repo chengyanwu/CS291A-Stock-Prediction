@@ -192,6 +192,8 @@ def get_dls(params):
             batch_size=params.batch_size,
             workers=params.num_workers,
         )
+        dls.mean = 419.71711805
+        dls.std = 143.58800197
 
     elif params.dset == 'stocks':
         # root_path = './datasets/'
