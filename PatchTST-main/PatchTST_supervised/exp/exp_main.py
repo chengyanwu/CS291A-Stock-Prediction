@@ -215,6 +215,105 @@ class Exp_Main(Exp_Basic):
         self.model.load_state_dict(torch.load(best_model_path))
 
         return self.model
+    
+    def test_temp(self, setting, test=0):
+        test_data, test_loader = self._get_data(flag='test')
+        
+        saved_path = "/home/homesecurity/CS291A-Stock-Prediction/PatchTST-main/PatchTST_supervised/checkpoints/amazon_patchtst_finetuned_cw40_tw7_patch12_stride12_epochs-finetune20_model1.pth"
+
+        if test:
+            print('loading model')
+            self.model.load_state_dict(torch.load(saved_path))
+
+        preds = []
+        trues = []
+        inputx = []
+        folder_path = './test_results/' + saved_path[-20:-6] + '/'
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+
+        self.model.eval()
+        with torch.no_grad():
+            for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(test_loader):
+                batch_x = batch_x.float().to(self.device)
+                batch_y = batch_y.float().to(self.device)
+
+                batch_x_mark = batch_x_mark.float().to(self.device)
+                batch_y_mark = batch_y_mark.float().to(self.device)
+
+                # decoder input
+                dec_inp = torch.zeros_like(batch_y[:, -self.args.pred_len:, :]).float()
+                dec_inp = torch.cat([batch_y[:, :self.args.label_len, :], dec_inp], dim=1).float().to(self.device)
+                # encoder - decoder
+                if self.args.use_amp:
+                    with torch.cuda.amp.autocast():
+                        if 'Linear' in self.args.model or 'TST' in self.args.model:
+                            outputs = self.model(batch_x)
+                        else:
+                            if self.args.output_attention:
+                                outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)[0]
+                            else:
+                                outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
+                else:
+                    if 'Linear' in self.args.model or 'TST' in self.args.model:
+                            outputs = self.model(batch_x)
+                    else:
+                        if self.args.output_attention:
+                            outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)[0]
+
+                        else:
+                            outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
+
+                f_dim = -1 if self.args.features == 'MS' else 0
+                # print(outputs.shape,batch_y.shape)
+                outputs = outputs[:, -self.args.pred_len:, f_dim:]
+                batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
+                outputs = outputs.detach().cpu().numpy()
+                batch_y = batch_y.detach().cpu().numpy()
+
+                pred = outputs  # outputs.detach().cpu().numpy()  # .squeeze()
+                true = batch_y  # batch_y.detach().cpu().numpy()  # .squeeze()
+
+                preds.append(pred)
+                trues.append(true)
+                inputx.append(batch_x.detach().cpu().numpy())
+                if i % 20 == 0:
+                    input = batch_x.detach().cpu().numpy()
+                    gt = np.concatenate((input[0, :, -1], true[0, :, -1]), axis=0)
+                    pd = np.concatenate((input[0, :, -1], pred[0, :, -1]), axis=0)
+                    visual(gt, pd, os.path.join(folder_path, str(i) + '.pdf'))
+
+        if self.args.test_flop:
+            test_params_flop((batch_x.shape[1],batch_x.shape[2]))
+            exit()
+        preds = np.array(preds)
+        trues = np.array(trues)
+        inputx = np.array(inputx)
+
+        preds = preds.reshape(-1, preds.shape[-2], preds.shape[-1])
+        trues = trues.reshape(-1, trues.shape[-2], trues.shape[-1])
+        inputx = inputx.reshape(-1, inputx.shape[-2], inputx.shape[-1])
+
+        # result save
+        folder_path = './results/' + saved_path[-20:-6] + '/'
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+
+        mae, mse, rmse, mape, mspe, rse, corr = metric(preds, trues)
+        print('mse:{}, mae:{}, rse:{}'.format(mse, mae, rse))
+        f = open("result.txt", 'a')
+        f.write(setting + "  \n")
+        f.write('mse:{}, mae:{}, rse:{}'.format(mse, mae, rse))
+        f.write('\n')
+        f.write('\n')
+        f.close()
+
+        # np.save(folder_path + 'metrics.npy', np.array([mae, mse, rmse, mape, mspe,rse, corr]))
+        np.save(folder_path + 'pred.npy', preds)
+        # np.save(folder_path + 'true.npy', trues)
+        # np.save(folder_path + 'x.npy', inputx)
+        return
+    
 
     def test(self, setting, test=0):
         test_data, test_loader = self._get_data(flag='test')
