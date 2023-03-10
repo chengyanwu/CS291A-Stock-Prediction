@@ -27,7 +27,7 @@ parser.add_argument('--context_points', type=int,
 parser.add_argument('--target_points', type=int,
                     default=96, help='forecast horizon')
 parser.add_argument('--batch_size', type=int, default=64, help='batch size')
-parser.add_argument('--num_workers', type=int, default=1,
+parser.add_argument('--num_workers', type=int, default=0,
                     help='number of workers for DataLoader')
 parser.add_argument('--scaler', type=str, default='standard',
                     help='scale the input data')
@@ -36,8 +36,8 @@ parser.add_argument('--features', type=str, default='M',
 parser.add_argument('--use_time_features', type=int, default=0,
                     help='whether to use time features or not')
 # Patch
-parser.add_argument('--patch_len', type=int, default=32, help='patch length')
-parser.add_argument('--stride', type=int, default=16,
+parser.add_argument('--patch_len', type=int, default=12, help='patch length')
+parser.add_argument('--stride', type=int, default=12,
                     help='stride between patch')
 # RevIN
 parser.add_argument('--revin', type=int, default=1,
@@ -49,7 +49,7 @@ parser.add_argument('--n_heads', type=int, default=16,
                     help='number of Transformer heads')
 parser.add_argument('--d_model', type=int, default=128,
                     help='Transformer d_model')
-parser.add_argument('--d_ff', type=int, default=256,
+parser.add_argument('--d_ff', type=int, default=512,
                     help='Tranformer MLP dimension')
 parser.add_argument('--dropout', type=float, default=0.2,
                     help='Transformer dropout')
@@ -105,6 +105,9 @@ def get_model(c_in, args):
                      head_type='prediction',
                      res_attention=False
                      )
+    # print out the model size
+    print('number of model params', sum(p.numel()
+          for p in model.parameters() if p.requires_grad))
     return model
 
 
@@ -120,7 +123,9 @@ def find_lr():
     # define learner
     learn = Learner(dls, model, loss_func, cbs=cbs)
     # fit the data to the model
-    return learn.lr_finder()
+    suggested_lr = learn.lr_finder()
+    print('suggested_lr', suggested_lr)
+    return suggested_lr
 
 
 def train_func(lr=args.lr):
@@ -152,6 +157,13 @@ def train_func(lr=args.lr):
 
     # fit the data to the model
     learn.fit_one_cycle(n_epochs=args.n_epochs, lr_max=lr, pct_start=0.2)
+
+    train_loss = learn.recorder['train_loss']
+    valid_loss = learn.recorder['valid_loss']
+    df = pd.DataFrame(
+        data={'train_loss': train_loss, 'valid_loss': valid_loss})
+    df.to_csv(args.save_path + args.save_pretrained_model +
+              '_losses.csv', float_format='%.6f', index=False)
 
 
 def test_func():
