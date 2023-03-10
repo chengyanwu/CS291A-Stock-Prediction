@@ -76,15 +76,18 @@ class GetTestCB(Callback):
         super().__init__()
 
     def before_test(self):
-        self.preds, self.targets = [], []        
+        self.preds, self.targets, self.inputs = [], [], []        
     
     def after_batch_test(self):        
         # append the prediction after each forward batch           
         self.preds.append(self.pred)
         self.targets.append(self.yb)
+        self.inputs.append(self.batch[0])
 
     def after_test(self):           
         self.preds = torch.concat(self.preds)#.detach().cpu().numpy()
         self.targets = torch.concat(self.targets)#.detach().cpu().numpy()
+        self.inputs = torch.concat(self.inputs)#.detach().cpu().numpy()
+
 
 

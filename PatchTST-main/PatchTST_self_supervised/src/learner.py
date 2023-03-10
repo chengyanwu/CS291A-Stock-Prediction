@@ -44,6 +44,8 @@ class Learner(GetAttr):
         self.initialize_callbacks(cbs)
         # Indicator of running lr_finder
         self.run_finder = False
+        self.mean = 0.
+        self.std = 1.
 
     def set_opt(self):
         if self.model:
@@ -279,12 +281,12 @@ class Learner(GetAttr):
         with torch.no_grad():
             self.all_batches('test')
         self('after_test')
-        self.preds, self.targets = to_numpy([cb.preds, cb.targets])
+        self.preds, self.targets, self.inputs = to_numpy([cb.preds, cb.targets, cb.inputs])
         # calculate scores
         if scores:
             s_vals = [score(cb.targets, cb.preds).to('cpu').numpy()
                       for score in list(scores)]
-            return self.preds, self.targets, s_vals
+            return self.preds, self.targets, s_vals, self.inputs
         else:
             return self.preds, self.targets
 
