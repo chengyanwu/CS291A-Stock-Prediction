@@ -68,6 +68,9 @@ parser.add_argument('--model_type', type=str, default='based_model',
 parser.add_argument('--is_train', type=int, default=1,
                     help='training the model')
 
+parser.add_argument('--cross_attention', type=int, default=0,
+                    help='use cross attention between channels')
+
 
 args = parser.parse_args()
 print('args:', args)
@@ -103,7 +106,8 @@ def get_model(c_in, args):
                      head_dropout=args.head_dropout,
                      act='relu',
                      head_type='prediction',
-                     res_attention=False
+                     res_attention=False,
+                     cross_attention=args.cross_attention
                      )
     # print out the model size
     print('number of model params', sum(p.numel()

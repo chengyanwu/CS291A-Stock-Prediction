@@ -274,7 +274,7 @@ class Dataset_Custom(Dataset):
         border2 = border2s[self.set_type]
 
         if self.features == 'M' or self.features == 'MS':
-            cols_data = df_raw.columns[1:]
+            cols_data = df_raw.columns[1:-1]
             df_data = df_raw[cols_data]
         elif self.features == 'S':
             df_data = df_raw[[self.target]]
@@ -285,8 +285,8 @@ class Dataset_Custom(Dataset):
             data = self.scaler.transform(df_data.values)
             self.mean = self.scaler.mean_
             self.std = self.scaler.scale_
-            print("mean:", self.mean)
-            print("std:", self.std)
+            # print("mean:", self.mean)
+            # print("std:", self.std)
         else:
             data = df_data.values
 

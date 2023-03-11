@@ -46,6 +46,7 @@ class Learner(GetAttr):
         self.run_finder = False
         self.mean = 0.
         self.std = 1.
+        self.new_data = None
 
     def set_opt(self):
         if self.model:
@@ -145,6 +146,8 @@ class Learner(GetAttr):
         # for self.num,self.batch in enumerate(progress_bar(dl, leave=False)):
         for num, batch in enumerate(self.dl):
             self.iter, self.batch = num, batch
+            if self.iter % 1000 == 0:
+                print("batch_num:", self.iter)
             if type_ == 'train':
                 self.batch_train()
             elif type_ == 'valid':
@@ -281,7 +284,8 @@ class Learner(GetAttr):
         with torch.no_grad():
             self.all_batches('test')
         self('after_test')
-        self.preds, self.targets, self.inputs = to_numpy([cb.preds, cb.targets, cb.inputs])
+        self.preds, self.targets, self.inputs = to_numpy(
+            [cb.preds, cb.targets, cb.inputs])
         # calculate scores
         if scores:
             s_vals = [score(cb.targets, cb.preds).to('cpu').numpy()
