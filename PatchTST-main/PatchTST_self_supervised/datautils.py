@@ -183,7 +183,7 @@ def get_dls(params):
             dataset_kwargs={
                 'root_path': root_path,
                 'data_path': 'AMZN_data.csv',
-                'features': 'S',
+                'features': params.features,
                 'scale': True,
                 'size': size,
                 'target': 'close',

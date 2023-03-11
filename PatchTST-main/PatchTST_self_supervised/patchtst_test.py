@@ -74,6 +74,9 @@ parser.add_argument('--finetuned_model_id', type=int,
 parser.add_argument('--model_type', type=str, default='based_model',
                     help='for multivariate model or univariate model')
 
+parser.add_argument('--cross_attention', type=int, default=0,
+                    help='use cross attention between channels')
+
 
 args = parser.parse_args()
 print('args:', args)
@@ -122,7 +125,8 @@ def get_model(c_in, args, head_type, weight_path=None):
                      head_dropout=args.head_dropout,
                      act='relu',
                      head_type=head_type,
-                     res_attention=False
+                     res_attention=False,
+                     cross_attention=args.cross_attention
                      )
     if weight_path:
         model = transfer_weights(weight_path, model)
@@ -245,6 +249,7 @@ def test_func(weight_path):
         args.save_path + args.save_finetuned_model + '_acc.csv', float_format='%.6f', index=False)
     return out
 
+
 class StandardScaler():
     def __init__(self, mean, std):
         self.mean = mean
@@ -255,6 +260,7 @@ class StandardScaler():
 
     def inverse_transform(self, data):
         return (data * self.std) + self.mean
+
 
 def plot(weight_path):
     dls = get_dls(args)
@@ -267,7 +273,7 @@ def plot(weight_path):
     # out: a list of [pred, targ, score]
     out = learn.test(dls.test, weight_path=weight_path +
                      '.pth', scores=[mse, mae])
-    
+
     pred = out[0]
     target = out[1]
     score = out[2]
@@ -295,20 +301,24 @@ def plot(weight_path):
 
         gt = np.concatenate((inp[:, -1].flatten(), t[:, -1]))
         pd = np.concatenate((inp[:, -1].flatten(), p[:, -1]))
-
+        # pd_y = p[:, -1]
+        # pd_x = [x + len(inp.flatten()) for x in range(len(pd_y))]
 
         visual(gt, pd, f"./test_results/40-7/test{i}.pdf")
+
 
 def visual(true, preds=None, name='./pic/test.pdf'):
     """
     Results visualization
     """
     plt.figure()
-    plt.plot(true, label='GroundTruth', linewidth=2)
     if preds is not None:
         plt.plot(preds, label='Prediction', linewidth=2)
+    plt.plot(true, label='GroundTruth', linewidth=2)
+
     plt.legend()
     plt.savefig(name, bbox_inches='tight')
+
 
 if __name__ == '__main__':
 
