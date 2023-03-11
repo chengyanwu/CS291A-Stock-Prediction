@@ -285,8 +285,6 @@ class Dataset_Custom(Dataset):
             data = self.scaler.transform(df_data.values)
             self.mean = self.scaler.mean_
             self.std = self.scaler.scale_
-            print("mean:", self.mean)
-            print("std:", self.std)
         else:
             data = df_data.values
 
