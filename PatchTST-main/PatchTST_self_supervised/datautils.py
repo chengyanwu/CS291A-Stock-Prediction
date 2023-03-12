@@ -18,7 +18,7 @@ DSETS = ['ettm1', 'ettm2', 'etth1', 'etth2', 'electricity',
 
 def get_dls(params):
 
-    assert params.dset in DSETS, f"Unrecognized dset (`{params.dset}`). Options include: {DSETS}"
+    # assert params.dset in DSETS, f"Unrecognized dset (`{params.dset}`). Options include: {DSETS}"
     if not hasattr(params, 'use_time_features'):
         params.use_time_features = False
 
@@ -195,24 +195,27 @@ def get_dls(params):
         dls.mean = 419.71711805
         dls.std = 143.58800197
 
+    elif params.dset == 'amazon_bin':
+        root_path = './datasets/'
+        size = [params.context_points, 0, params.target_points]
+        dls = DataLoaders(
+            datasetCls=Dataset_Custom,
+            dataset_kwargs={
+                'root_path': root_path,
+                'data_path': 'AMZN_bin.csv',
+                'features': params.features,
+                'scale': True,
+                'size': size,
+                'target': 'Close',
+                'bin': True,
+                'use_time_features': params.use_time_features
+            },
+            batch_size=params.batch_size,
+            workers=params.num_workers,
+        )
+
     elif params.dset == 'stocks':
-        # root_path = './datasets/'
-        # size = [params.context_points, 0, params.target_points]
-        # dls = DataLoaders(
-        #     datasetCls=Dataset_Custom,
-        #     dataset_kwargs={
-        #         'root_path': root_path,
-        #         'data_path': 'AMZN_data.csv',
-        #         'features': 'S',
-        #         'scale': True,
-        #         'size': size,
-        #         'target': 'close',
-        #         'use_time_features': params.use_time_features
-        #     },
-        #     batch_size=params.batch_size,
-        #     workers=params.num_workers,
-        # )
-        root_path = '/home/kyle/school/cs291a/data/stock/train/'
+        root_path = '../../../stocks/train/'
         size = [params.context_points, 0, params.target_points]
         dir_list = os.listdir(root_path)
 
@@ -231,13 +234,6 @@ def get_dls(params):
             batch_size=params.batch_size,
             workers=params.num_workers,
         )
-        # p = list(dls.train)
-
-        # print(next(iter(dls.train))[1].shape)
-        # print(next(iter(dls.train))[1])
-        # print(next(iter(dls.train))[1])
-        # print(dls.train_len)
-        # print(next(iter(dls.valid)))
 
         dls.len = params.context_points
         return dls

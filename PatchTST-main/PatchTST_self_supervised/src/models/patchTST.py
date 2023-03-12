@@ -104,6 +104,7 @@ class ClassificationHead(nn.Module):
         self.flatten = nn.Flatten(start_dim=1)
         self.dropout = nn.Dropout(head_dropout)
         self.linear = nn.Linear(n_vars*d_model, n_classes)
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         """
@@ -114,6 +115,7 @@ class ClassificationHead(nn.Module):
         x = self.flatten(x)         # x: bs x nvars * d_model
         x = self.dropout(x)
         y = self.linear(x)         # y: bs x n_classes
+        y = self.sigmoid(y)
         return y
 
 

@@ -215,7 +215,7 @@ class Dataset_Custom(Dataset):
                  features='S', data_path='ETTh1.csv',
                  target='OT', scale=True, timeenc=0, freq='h',
                  time_col_name='date', use_time_features=False,
-                 train_split=0.7, test_split=0.2
+                 train_split=0.7, test_split=0.2, bin=False
                  ):
         # size [seq_len, label_len, pred_len]
         # info
@@ -239,6 +239,7 @@ class Dataset_Custom(Dataset):
         self.freq = freq
         self.time_col_name = time_col_name
         self.use_time_features = use_time_features
+        self.bin = bin
 
         self.mean = 0.
         self.std = 1.
@@ -290,6 +291,9 @@ class Dataset_Custom(Dataset):
         else:
             data = df_data.values
 
+        if self.bin:
+            self.bin_target = df_raw[['close_inc']].values
+
         df_stamp = df_raw[[self.time_col_name]][border1:border2]
         df_stamp[self.time_col_name] = pd.to_datetime(
             df_stamp[self.time_col_name])
@@ -310,6 +314,8 @@ class Dataset_Custom(Dataset):
 
         self.data_x = data[border1:border2]
         self.data_y = data[border1:border2]
+        if self.bin:
+            self.bin_target = self.bin_target[border1:border2]
         self.data_stamp = data_stamp
 
     def __getitem__(self, index):
@@ -320,8 +326,12 @@ class Dataset_Custom(Dataset):
 
         seq_x = self.data_x[s_begin:s_end]
         seq_y = self.data_y[r_begin:r_end]
+        
         seq_x_mark = self.data_stamp[s_begin:s_end]
         seq_y_mark = self.data_stamp[r_begin:r_end]
+
+        if self.bin:
+            return _torch(seq_x, self.bin_target[s_end])
 
         if self.use_time_features:
             return _torch(seq_x, seq_y, seq_x_mark, seq_y_mark)

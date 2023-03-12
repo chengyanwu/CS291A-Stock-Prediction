@@ -28,6 +28,7 @@ class Learner(GetAttr):
                  cbs=None,
                  metrics=None,
                  opt_func=Adam,
+                 classification=False,
                  **kwargs):
 
         self.model, self.dls, self.loss_func, self.lr = model, dls, loss_func, lr
@@ -37,6 +38,7 @@ class Learner(GetAttr):
 
         self.metrics = metrics
         self.n_inp = 2
+        self.classification = classification
         # self.n_inp = self.dls.train.dataset.n_inp if self.dls else 0
         # Initialize callbacks
         if cbs and not isinstance(cbs, List):
@@ -146,8 +148,6 @@ class Learner(GetAttr):
         # for self.num,self.batch in enumerate(progress_bar(dl, leave=False)):
         for num, batch in enumerate(self.dl):
             self.iter, self.batch = num, batch
-            if self.iter % 1000 == 0:
-                print("batch_num:", self.iter)
             if type_ == 'train':
                 self.batch_train()
             elif type_ == 'valid':
@@ -199,7 +199,7 @@ class Learner(GetAttr):
     def model_forward(self):
         self('before_forward')
         self.pred = self.model(self.xb)
-        self('after_forward')
+        # self('after_forward')
         return self.pred
 
     def _do_batch_validate(self):
